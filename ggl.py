@@ -10,6 +10,7 @@ TOKEN_ASSIGN = "ASSIGN"
 TOKEN_INT = "INT"
 TOKEN_FLOAT = "FLOAT"
 TOKEN_STRING_TYPE = "STRING_TYPE"
+TOKEN_BOOL = "BOOL" 
 
 class Token:
     def __init__(self, type, value):
@@ -58,7 +59,7 @@ class Lexer:
 
     def tokenize_string(self):
         value = ""
-        self.advance()  
+        self.advance()
         while self.peek() != '"':
             value += self.peek()
             self.advance()
@@ -95,6 +96,8 @@ class Lexer:
             return Token(TOKEN_FLOAT, value)
         elif value.lower() == "string":
             return Token(TOKEN_STRING_TYPE, value)
+        elif value.lower() == "bool":  
+            return Token(TOKEN_BOOL, value)
         else:
             return Token(TOKEN_IDENTIFIER, value)
 
@@ -104,7 +107,12 @@ def interpret(tokens):
     current_data_type = None
     i = 0
     while i < len(tokens):
-        if tokens[i].type == TOKEN_INT or tokens[i].type == TOKEN_FLOAT or tokens[i].type == TOKEN_STRING_TYPE:
+        if (
+            tokens[i].type == TOKEN_INT
+            or tokens[i].type == TOKEN_FLOAT
+            or tokens[i].type == TOKEN_STRING_TYPE
+            or tokens[i].type == TOKEN_BOOL
+        ):
             current_data_type = tokens[i].type
             i += 1
             if i < len(tokens) and tokens[i].type == TOKEN_IDENTIFIER:
@@ -113,12 +121,23 @@ def interpret(tokens):
                 if i < len(tokens) and tokens[i].type == TOKEN_ASSIGN:
                     i += 1
                     if i < len(tokens):
-                        if tokens[i].type in [TOKEN_INT, TOKEN_FLOAT, TOKEN_STRING]:
+                        if (
+                            tokens[i].type in [TOKEN_INT, TOKEN_FLOAT, TOKEN_STRING, TOKEN_BOOL]
+                            or (tokens[i].type == TOKEN_IDENTIFIER and tokens[i].value.lower() in ["true", "false"])
+                        ):
                             assigned_value = tokens[i].value
                             if current_data_type == TOKEN_INT:
                                 assigned_value = int(assigned_value)
                             elif current_data_type == TOKEN_FLOAT:
                                 assigned_value = float(assigned_value)
+                            elif current_data_type == TOKEN_BOOL:
+                                if assigned_value.lower() == "true":
+                                    assigned_value = True
+                                elif assigned_value.lower() == "false":
+                                    assigned_value = False
+                                else:
+                                    print(f"Error: Invalid BOOLEAN value '{tokens[i].value}'")
+                                    return
 
                             variables[variable_name] = assigned_value
                             i += 1
@@ -146,7 +165,7 @@ def interpret(tokens):
                         else:
                             print(f"Error: Variable '{tokens[i].value}' is not defined")
                             return
-                    elif tokens[i].type == TOKEN_INT or tokens[i].type == TOKEN_FLOAT or tokens[i].type == TOKEN_STRING:
+                    elif tokens[i].type in [TOKEN_INT, TOKEN_FLOAT, TOKEN_STRING, TOKEN_BOOL]:
                         output += str(tokens[i].value)
                     else:
                         output += tokens[i].value
@@ -163,8 +182,6 @@ def interpret(tokens):
         else:
             print("Error: Expected data type declaration, 'print' statement, or variable assignment")
             return
-
-
 def main():
     if len(sys.argv) != 2:
         print("Usage: python interpreter.py <filename>")
