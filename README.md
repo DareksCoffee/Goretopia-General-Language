@@ -13,4 +13,13 @@ Run the following command to interpret your GGL file:
 ```
 python ggl.py <filename>.ggl
 ```
-For further infos please do contact me in Discord (wdarek).
+
+# Basic application of ggl
+
+```
+string name = "Albert"
+int age = 53
+
+print(name)
+print(age)
+```
